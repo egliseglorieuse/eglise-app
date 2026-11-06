@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Espace de gestion de l’église</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--ink:#14213d;--mute:#5b6781;--line:#dde2ec;--brand:#1f3a6e;--brand-ink:#fff;--sun:#d99a1c;--ok:#1f7a55;--bar:#9db0d6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1424;--card:#172038;--ink:#e8ecf6;--mute:#9aa6c2;--line:#2a3555;--brand:#7f9fe0;--brand-ink:#0e1424;--sun:#f0b43c;--ok:#4cc190;--bar:#3a4f82;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1424;--card:#172038;--ink:#e8ecf6;--mute:#9aa6c2;--line:#2a3555;--brand:#7f9fe0;--brand-ink:#0e1424;--sun:#f0b43c;--ok:#4cc190;--bar:#3a4f82;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Source Sans 3",system-ui,sans-serif;display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+h1,h2,h3{font-family:"Bricolage Grotesque",Georgia,serif;margin:0;line-height:1.15}
+aside{background:var(--brand);color:var(--brand-ink);padding:24px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+aside .logo{font:700 20px "Bricolage Grotesque",serif;margin-bottom:4px}
+aside small{opacity:.8;margin-bottom:18px;display:block}
+nav button{all:unset;cursor:pointer;display:block;width:100%;padding:10px 12px;border-radius:8px;color:inherit;font-weight:600}
+nav button:hover{background:rgba(255,255,255,.14)}
+nav button[aria-current=page]{background:var(--sun);color:#1b1405}
+nav button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+main{padding:28px;max-width:1000px;width:100%}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.head h2{font-size:28px}
+.btn{background:var(--brand);color:var(--brand-ink);border:0;border-radius:8px;padding:9px 16px;font:600 15px inherit;font-family:inherit;cursor:pointer}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card h3{font-size:17px;margin-bottom:12px}
+.stat b{display:block;font:700 30px "Bricolage Grotesque",serif}
+.stat span{color:var(--mute)}
+.chart{display:flex;align-items:flex-end;gap:10px;height:150px;padding-top:8px}
+.chart div{flex:1;text-align:center;font-size:13px;color:var(--mute);display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.chart i{display:block;background:var(--bar);border-radius:5px 5px 0 0}
+.chart div:last-child i{background:var(--sun)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+input,select{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);min-width:0}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mute);font-weight:600}
+.tag{padding:2px 9px;border-radius:99px;font-size:13px;background:var(--bg);border:1px solid var(--line)}
+.tag.ok{color:var(--ok);border-color:var(--ok)}
+.meter{display:grid;grid-template-columns:180px 1fr 110px;gap:10px;align-items:center;margin:10px 0;font-size:15px}
+.meter u{display:block;height:10px;border-radius:5px;background:var(--brand);text-decoration:none}
+.meter label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.meter.m4{grid-template-columns:190px 1fr 90px auto}
+.pcard{text-align:left;cursor:pointer;font:inherit;color:inherit;display:block;width:100%}
+.pcard:hover{border-color:var(--sun)}
+.pcard h3{margin-bottom:6px}
+.ph{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.ph img{width:96px;height:96px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--line)}
+.yr{margin:22px 0 10px;font-size:22px}
+#login{display:none;position:fixed;inset:0;z-index:30;background:var(--bg);padding:16px;overflow:auto;place-items:center}
+#login.on{display:grid}
+#login form{width:min(380px,100%);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px}
+#login label{display:block;margin:14px 0 4px;font-weight:600}
+#login input{width:100%}
+#login .btn{width:100%;margin-top:6px}
+#lerr{color:#c0392b;min-height:1.4em;margin:10px 0 0}
+.empty{color:var(--mute);padding:20px;text-align:center}
+dialog{max-height:90vh;overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);padding:22px;width:min(420px,92vw)}
+dialog::backdrop{background:rgba(10,15,30,.55)}
+dialog label{display:block;margin:12px 0 4px;font-weight:600}
+dialog input,dialog select,dialog textarea{width:100%;font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.acts{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.note{color:var(--mute);font-size:14px;margin-top:22px}
+@media (max-width:760px){
+body{display:block;padding-bottom:70px}
+aside{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;flex-direction:row;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+aside .logo,aside small{display:none}
+nav{display:flex;width:100%;gap:4px;overflow-x:auto}
+nav button{text-align:center;padding:10px 9px;font-size:13px;white-space:nowrap;flex:1 0 auto}
+main{padding:20px 16px}
+.meter{grid-template-columns:160px 1fr}.meter span:last-child{grid-column:1/-1}.meter.m4{grid-template-columns:160px 1fr}.meter.m4 span:nth-child(n+3){grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<aside>
+  <div class="logo" id="chname">⛪</div>
+  <small id="who">Espace de gestion</small>
+  <nav id="nav"></nav>
+</aside>
+<main id="main"></main>
+<dialog id="dlg"><form id="frm" method="dialog"></form></dialog>
+<div id="login"><form onsubmit="login(event)"><h2 id="lt"></h2><p style="color:var(--mute);margin:6px 0 0">Connectez-vous pour continuer</p>
+<label for="lem">Email</label><input id="lem" type="email" autocomplete="username" required>
+<label for="lpw">Mot de passe</label><input id="lpw" type="password" autocomplete="current-password" required>
+<p id="lerr" role="alert"></p><button class="btn" type="submit">Se connecter</button></form></div>
+<script>
+// ===== À RENSEIGNER avant la mise en ligne (voir LISEZMOI.md) =====
+var CONFIG={SUPABASE_URL:"https://VOTRE-PROJET.supabase.co",SUPABASE_ANON_KEY:"VOTRE_CLE_ANON_PUBLIQUE",EGLISE_NOM:"Mon Église"};
+// ==================================================================
+var membres=[],dons=[],cultes=[];
+var TYPES=["Happy Sunday","1er service dimanche","2nd service dimanche","Vendredi surnaturel"];
+var deps=[],gis=[],mvs=["LES GLOWS","LES WINNERS","AGAPE"],cels=[],clas=[];
+var tab="dash";
+var tabs=[["dash","Accueil"],["mem","Membres"],["grp","Groupes"],["mv","Mouvements"],["cul","Cultes"],["cel","Cellules"],["cla","Classes"],["prog","Programmes"],["fin","Finances"]];
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fmt(n){return n.toLocaleString("fr-FR")+" FCFA"}
+function fdate(s){return s?new Date(s).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}):"—"}
+function go(t){tab=t;curProg=null;nav();draw()}
+function nav(){$("#nav").innerHTML=tabs.filter(function(t){return canR(TABKEY[t[0]])}).map(function(t){return '<button onclick="go(\''+t[0]+'\')" '+(t[0]==tab?'aria-current="page"':'')+'>'+t[1]+'</button>'}).join("")+'<button onclick="logout()">Déconnexion</button>'}
+function draw(){({dash:dash,mem:mem,grp:grp,mv:mv,cul:cul,cel:function(){lst("cel")},cla:function(){lst("cla")},prog:prog,fin:fin})[tab]()}
+function sum(f){return dons.filter(f).reduce(function(a,x){return a+x.v},0)}
+
+function fshort(s){return new Date(s).toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}
+function dash(){
+  var mois=sum(function(x){return x.d.slice(0,7)==new Date().toISOString().slice(0,7)});
+  var days={};cultes.forEach(function(c){(days[c.d]=days[c.d]||[]).push(c)});
+  var ds=Object.keys(days).sort(),rec=ds.slice(-8),ld=ds[ds.length-1],wk=0;
+  var tot=function(d){return days[d].reduce(function(a,c){return a+c.p},0)};
+  var detail=function(d){return days[d].map(function(c){return c.t+" "+c.p}).join(" · ")};
+  var max=Math.max.apply(null,rec.map(tot).concat([1]));
+  if(ld){var lim=new Date(ld).getTime()-6*864e5;ds.forEach(function(d){if(new Date(d).getTime()>=lim)wk+=tot(d)})}
+  $("#main").innerHTML='<div class="head"><h2>Bonjour</h2><div style="display:flex;gap:8px;flex-wrap:wrap">'+(role=="admin"?'<button class="btn alt" onclick="exportAll()">Exporter une sauvegarde</button>':'')+'<button class="btn" onclick="formCulte()">Enregistrer un culte</button></div></div>'+
+  '<div class="grid">'+
+  '<div class="card stat"><b>'+membres.length+'</b><span>membres enregistrés</span></div>'+
+  '<div class="card stat"><b>'+(ld?tot(ld):"—")+'</b><span>'+(ld?'présents le '+fshort(ld)+' : '+esc(detail(ld)):'aucun culte enregistré')+'</span></div>'+
+  '<div class="card stat"><b>'+wk+'</b><span>présents sur la semaine du dernier culte</span></div>'+
+  (canR("finances")?'<div class="card stat"><b>'+fmt(mois)+'</b><span>reçus en '+new Date().toLocaleDateString("fr-FR",{month:"long"})+'</span></div>':'')+'</div>'+
+  '<div class="card"><h3>Membres présents aux cultes (total par jour)</h3>'+(rec.length?'<div class="chart">'+
+  rec.map(function(d){return '<div title="'+esc(detail(d))+'"><i style="height:'+Math.round(tot(d)/max*100)+'%"></i>'+tot(d)+'<br>'+fshort(d)+'</div>'}).join("")+'</div>':'<p class="empty">Aucun culte enregistré. Cliquez sur « Enregistrer un culte ».</p>')+'</div>'+
+  '<p class="note">Chaque culte enregistré met à jour cet écran.</p>';
+}
+
+function mem(){
+  $("#main").innerHTML='<div class="head"><h2>Membres</h2><button class="btn" onclick="formMembre()">Ajouter un membre</button></div>'+
+  '<div class="row"><input id="q" type="search" placeholder="Rechercher un nom" aria-label="Rechercher un nom" oninput="rows()">'+
+  '<select id="f" aria-label="Filtrer par département" onchange="rows()"><option value="">Tous les départements</option>'+deps.map(function(d){return '<option>'+d+'</option>'}).join("")+'</select><select id="g" aria-label="Filtrer par groupe d’intimité" onchange="rows()"><option value="">Tous les groupes d’intimité</option>'+gis.map(function(d){return '<option>'+d+'</option>'}).join("")+'</select><select id="mf" aria-label="Filtrer par mouvement" onchange="rows()"><option value="">Tous les mouvements</option>'+mvs.map(function(d){return '<option>'+d+'</option>'}).join("")+'</select></div>'+
+  '<div class="card scroll"><table><thead><tr><th>Nom</th><th>Téléphone</th><th>Département</th><th>Groupe d’intimité</th><th>Mouvements</th><th>Cellules</th><th>Classes</th><th>Baptême</th><th>Statut</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>';
+  rows();
+}
+function rows(){
+  var q=$("#q").value.toLowerCase(),f=$("#f").value,g=$("#g").value,mf=$("#mf").value;
+  var l=membres.filter(function(m){return m.nom.toLowerCase().indexOf(q)>-1&&(!f||(m.dp||[]).indexOf(f)>-1)&&(!g||m.gi==g)&&(!mf||(m.mv||[]).indexOf(mf)>-1)});
+  $("#tb").innerHTML=l.length?l.map(function(m){return '<tr><td>'+esc(m.nom)+'</td><td>'+esc(m.tel)+'</td><td>'+esc((m.dp||[]).join(", ")||"—")+'</td><td>'+esc(m.gi||"—")+'</td><td>'+esc((m.mv||[]).join(", ")||"—")+'</td><td>'+esc((m.ce||[]).join(", ")||"—")+'</td><td>'+esc((m.cs||[]).join(", ")||"—")+'</td><td>'+fdate(m.bapt)+'</td><td><span class="tag '+(m.statut=="Membre"?'ok':'')+'">'+m.statut+'</span></td><td style="white-space:nowrap"><button class="btn alt" style="padding:3px 10px;font-size:13px" onclick="formMembre(null,'+m.id+')">Modifier</button> <button class="btn alt" style="padding:3px 10px;font-size:13px" onclick="delMem('+m.id+')">Supprimer</button></td></tr>'}).join(""):'<tr><td colspan="10" class="empty">Aucun membre ne correspond. Modifiez la recherche ou ajoutez un membre.</td></tr>';
+}
+function formMembre(pre,eid){pre=pre||{};
+  var m=eid?membres.filter(function(x){return x.id==eid})[0]:null;
+  if(m)pre={dep:m.dp,gi:m.gi,mv:m.mv,cel:m.ce,cla:m.cs};
+  var any=m?"":(pre.dep||pre.gi||pre.mv||pre.cel||pre.cla);
+  open_(m?'Modifier le membre':(any?'Nouveau membre : '+esc(any):'Nouveau membre'),(any?'<p class="note" style="margin:8px 0 0">Ce membre sera aussi ajouté à la liste des membres de l’église.</p>':'')+'<label for="a">Nom complet</label><input id="a" required value="'+esc(m?m.nom:"")+'">'+
+  '<label for="b">Téléphone</label><input id="b" type="tel" value="'+esc(m?m.tel:"")+'">'+
+  '<fieldset style="border:0;padding:0;margin:12px 0 0"><legend style="font-weight:600;margin-bottom:4px">Départements (facultatif, plusieurs possibles)</legend>'+(deps.map(function(d){return '<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:4px 0"><input type="checkbox" name="dpm" value="'+esc(d)+'"'+(sel(pre.dep,d)?' checked':'')+' style="width:auto"> '+esc(d)+'</label>'}).join("")||'<p class="note">Aucun département créé.</p>')+'</fieldset>'+
+  '<label for="h">Groupe d’intimité (un seul)</label><select id="h"><option value="">Aucun groupe</option>'+gis.map(function(d){return '<option'+(sel(pre.gi,d)?' selected':'')+'>'+d+'</option>'}).join("")+'</select>'+
+  '<label for="e">Date de baptême (si baptisé)</label><input id="e" type="date" value="'+(m?m.bapt:"")+'">'+
+  '<fieldset style="border:0;padding:0;margin:12px 0 0"><legend style="font-weight:600;margin-bottom:4px">Mouvements (facultatif)</legend>'+(mvs.map(function(v){return '<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:4px 0"><input type="checkbox" name="mvm" value="'+esc(v)+'"'+(sel(pre.mv,v)?' checked':'')+' style="width:auto"> '+esc(v)+'</label>'}).join("")||'<p class="note">Aucun mouvement créé.</p>')+'</fieldset>'+fset("cel","Cellules (facultatif)","cem",pre)+fset("cla","Classes (facultatif)","csm",pre),
+  function(){var o=({nom:$("#a").value.trim(),tel:$("#b").value,dp:[].slice.call(document.querySelectorAll('input[name="dpm"]:checked')).map(function(x){return x.value}),ce:chk("cem"),cs:chk("csm"),gi:$("#h").value,mv:[].slice.call(document.querySelectorAll('input[name="mvm"]:checked')).map(function(x){return x.value}),statut:$("#e").value?"Membre":"Nouveau",bapt:$("#e").value});if(m)Object.assign(m,o);else{o.id=Date.now();membres.unshift(o)}draw()});
+}
+
+function fin(){
+  var types=["Dîme","Offrande","Don projet"],tot=sum(function(){return true});
+  $("#main").innerHTML='<div class="head"><h2>Finances</h2><button class="btn" onclick="formDon()">Enregistrer un don</button></div>'+
+  '<div class="card" style="margin-bottom:18px"><h3>Total reçu : '+fmt(tot)+'</h3>'+
+  types.map(function(t){var s=sum(function(x){return x.t==t});return '<div class="meter"><span>'+t+'</span><span><u style="width:'+(tot?Math.round(s/tot*100):0)+'%"></u></span><span>'+fmt(s)+'</span></div>'}).join("")+'</div>'+
+  '<div class="card scroll"><table><thead><tr><th>Date</th><th>Donateur</th><th>Type</th><th>Montant</th><th></th></tr></thead><tbody>'+
+  dons.map(function(x){return '<tr><td>'+fdate(x.d)+'</td><td>'+esc(x.m)+'</td><td><span class="tag">'+x.t+'</span></td><td>'+fmt(x.v)+'</td><td><button class="btn alt" style="padding:3px 10px;font-size:13px" onclick="delDon('+x.id+')">Supprimer</button></td></tr>'}).join("")+'</tbody></table></div>';
+}
+function formDon(){
+  open_('Enregistrer un don','<label for="a">Donateur</label><select id="a"><option>Anonyme</option>'+membres.map(function(m){return '<option>'+esc(m.nom)+'</option>'}).join("")+'</select>'+
+  '<label for="b">Type</label><select id="b"><option>Dîme</option><option>Offrande</option><option>Don projet</option></select>'+
+  '<label for="c">Montant (FCFA)</label><input id="c" type="number" min="1" required>'+
+  '<label for="e">Date</label><input id="e" type="date" value="'+new Date().toISOString().slice(0,10)+'" required>',
+  function(){dons.unshift({id:Date.now(),d:$("#e").value,m:$("#a").value,t:$("#b").value,v:Number($("#c").value)});fin()});
+}
+
+function grp(){
+  function bloc(titre,list,key,kind){
+    var cnt=function(n){return membres.filter(function(m){return has(m,kind,n)}).length};
+    var max=Math.max.apply(null,list.map(cnt).concat([1]));
+    return '<div class="card"><div class="head" style="margin-bottom:6px"><h3 style="margin:0">'+titre+'</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt" onclick="delGrp(\''+kind+'\')">Supprimer la sélection</button><button class="btn" onclick="formGrp(\''+kind+'\')">Ajouter</button></div></div>'+
+    (list.map(function(n){var c=cnt(n);return '<div class="meter m4"><label><input type="checkbox" name="'+kind+'" value="'+esc(n)+'"> '+esc(n)+'</label><span><u style="width:'+Math.round(c/max*100)+'%"></u></span><span>'+c+' membre'+(c>1?'s':'')+'</span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn alt" style="padding:4px 10px;font-size:13px" data-n="'+esc(n)+'" onclick="addTo(\''+kind+'\',this.dataset.n)">+ Membre</button><button class="btn alt" style="padding:4px 10px;font-size:13px" data-n="'+esc(n)+'" onclick="attach(\''+kind+'\',this.dataset.n)">Rattacher</button></span></div>'}).join("")||'<p class="empty">Aucun élément. Cliquez sur « Ajouter ».</p>')+'</div>';
+  }
+  $("#main").innerHTML='<div class="head"><h2>Départements et groupes d’intimité</h2></div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">'+bloc("Départements",deps,"dep","dep")+bloc("Groupes d’intimité",gis,"gi","gi")+'</div>';
+}
+function formGrp(kind){
+  open_(kind=="dep"?"Ajouter des départements":"Ajouter des groupes d’intimité",'<label for="a">Un nom par ligne</label><textarea id="a" rows="5" required></textarea>',function(){
+    var list=kind=="dep"?deps:gis;
+    $("#a").value.split("\n").forEach(function(s){s=s.trim();if(s&&list.indexOf(s)<0)list.push(s)});
+    grp()});
+}
+function delGrp(kind){
+  var sel=[].slice.call(document.querySelectorAll('input[name="'+kind+'"]:checked')).map(function(x){return x.value});
+  var key=kind=="dep"?"dep":"gi",list=kind=="dep"?deps:gis,nom=kind=="dep"?"département":"groupe d’intimité";
+  if(!sel.length){open_("Aucune sélection",'<p>Cochez au moins un élément dans la liste, puis cliquez sur « Supprimer la sélection ».</p>',function(){},"Compris");return}
+  var n=membres.filter(function(m){return sel.some(function(s){return has(m,kind,s)})}).length;
+  open_("Supprimer "+sel.length+" élément"+(sel.length>1?"s":""),'<p>'+sel.map(function(s){return esc(s)}).join(", ")+'</p><p>'+(n?n+" membre"+(n>1?"s n’auront":" n’aura")+" plus de "+nom+".":"Aucun membre n’est concerné.")+'</p>',function(){
+    sel.forEach(function(s){list.splice(list.indexOf(s),1)});
+    membres.forEach(function(m){var f=FLD[kind];if(Array.isArray(m[f]))m[f]=m[f].filter(function(v){return sel.indexOf(v)<0});else if(sel.indexOf(m[f])>-1)m[f]=""});grp()},"Supprimer");
+}
+function mv(){
+  var has=function(m,n){return (m.mv||[]).indexOf(n)>-1};
+  var cnt=function(n){return membres.filter(function(m){return has(m,n)}).length};
+  var max=Math.max.apply(null,mvs.map(cnt).concat([1]));
+  $("#main").innerHTML='<div class="head"><h2>Mouvements</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt" onclick="delMv()">Supprimer la sélection</button><button class="btn" onclick="formMv()">Ajouter</button></div></div>'+
+  '<div class="card">'+(mvs.map(function(n){var c=cnt(n);return '<div class="meter m4"><label><input type="checkbox" name="mv" value="'+esc(n)+'"> '+esc(n)+'</label><span><u style="width:'+Math.round(c/max*100)+'%"></u></span><span>'+c+' membre'+(c>1?'s':'')+'</span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn alt" style="padding:4px 10px;font-size:13px" data-n="'+esc(n)+'" onclick="addTo(\'mv\',this.dataset.n)">+ Membre</button><button class="btn alt" style="padding:4px 10px;font-size:13px" data-n="'+esc(n)+'" onclick="attach(\'mv\',this.dataset.n)">Rattacher</button></span></div>'}).join("")||'<p class="empty">Aucun mouvement. Cliquez sur « Ajouter ».</p>')+'</div>'+
+  mvs.map(function(n){var l=membres.filter(function(m){return has(m,n)});return '<div class="card" style="margin-top:14px"><h3>'+esc(n)+'</h3><p style="margin:0;color:var(--mute)">'+(l.length?l.map(function(m){return esc(m.nom)}).join(", "):"Aucun membre pour le moment.")+'</p></div>'}).join("")+
+  '<p class="note">Un membre peut appartenir à plusieurs mouvements, ou à aucun. Choisissez-les à l’enregistrement du membre.</p>';
+}
+function formMv(){
+  open_("Ajouter des mouvements",'<label for="a">Un nom par ligne</label><textarea id="a" rows="5" required></textarea>',function(){
+    $("#a").value.split("\n").forEach(function(s){s=s.trim();if(s&&mvs.indexOf(s)<0)mvs.push(s)});mv()});
+}
+function delMv(){
+  var sel=[].slice.call(document.querySelectorAll('input[name="mv"]:checked')).map(function(x){return x.value});
+  if(!sel.length){open_("Aucune sélection",'<p>Cochez au moins un mouvement dans la liste, puis cliquez sur « Supprimer la sélection ».</p>',function(){},"Compris");return}
+  var n=membres.filter(function(m){return (m.mv||[]).some(function(v){return sel.indexOf(v)>-1})}).length;
+  open_("Supprimer "+sel.length+" mouvement"+(sel.length>1?"s":""),'<p>'+sel.map(function(s){return esc(s)}).join(", ")+'</p><p>'+(n?n+" membre"+(n>1?"s seront retirés":" sera retiré")+" de ce"+(sel.length>1?"s mouvements":" mouvement")+".":"Aucun membre n’est concerné.")+'</p>',function(){
+    sel.forEach(function(s){mvs.splice(mvs.indexOf(s),1)});
+    membres.forEach(function(m){m.mv=(m.mv||[]).filter(function(v){return sel.indexOf(v)<0})});mv()},"Supprimer");
+}
+function attach(kind,n){
+  var cand=membres.filter(function(m){return !has(m,kind,n)});
+  if(!cand.length){open_("Rattacher des membres",'<p>Tous les membres sont déjà dans « '+esc(n)+' ».</p>',function(){},"Compris");return}
+  open_("Rattacher des membres : "+esc(n),'<div style="max-height:280px;overflow:auto;margin-top:8px">'+cand.map(function(m){var cur=kind=="gi"?m.gi:"";return '<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:4px 0"><input type="checkbox" name="att" value="'+m.id+'" style="width:auto"> '+esc(m.nom)+(cur?' <span style="color:var(--mute)">(actuellement : '+esc(cur)+')</span>':'')+'</label>'}).join("")+'</div>'+(kind!="gi"?"":'<p class="note">Un membre n’a qu’un seul groupe d’intimité : le rattachement remplace l’ancien.</p>'),function(){
+    var ids=[].slice.call(document.querySelectorAll('input[name="att"]:checked')).map(function(x){return Number(x.value)});
+    membres.forEach(function(m){if(ids.indexOf(m.id)<0)return;if(kind=="gi")m.gi=n;else{var f=FLD[kind];m[f]=m[f]||[];m[f].push(n)}});draw()},"Rattacher");
+}
+function cul(){
+  var cs=cultes.slice().sort(function(a,b){return a.d<b.d?1:a.d>b.d?-1:0});
+  $("#main").innerHTML='<div class="head"><h2>Cultes</h2><button class="btn" onclick="formCulte()">Enregistrer un culte</button></div>'+
+  '<div class="card scroll"><table><thead><tr><th>Date</th><th>Type</th><th>Membres présents</th><th>Visiteurs</th><th></th></tr></thead><tbody>'+
+  (cs.map(function(c){return '<tr><td>'+fdate(c.d)+'</td><td>'+esc(c.t)+'</td><td>'+c.p+'</td><td>'+(c.v||"—")+'</td><td><button class="btn alt" style="padding:3px 10px;font-size:13px" onclick="delCulte('+c.id+')">Supprimer</button></td></tr>'}).join("")||'<tr><td colspan="5" class="empty">Aucun culte enregistré. Cliquez sur « Enregistrer un culte ».</td></tr>')+'</tbody></table></div>'+
+  '<p class="note">L’accueil se met à jour à chaque culte enregistré. Si vous enregistrez le même type de culte à la même date, le nombre est corrigé au lieu d’être compté deux fois.</p>';
+}
+function formCulte(){
+  open_("Enregistrer un culte",
+  '<label for="a">Date</label><input id="a" type="date" value="'+new Date().toISOString().slice(0,10)+'" required>'+
+  '<label for="b">Type de culte</label><select id="b">'+TYPES.map(function(t){return '<option>'+t+'</option>'}).join("")+'</select>'+
+  '<label for="c">Membres présents</label><input id="c" type="number" min="0" required>'+
+  '<label for="e">Visiteurs (facultatif)</label><input id="e" type="number" min="0">',
+  function(){
+    var n={id:Date.now(),d:$("#a").value,t:$("#b").value,p:Number($("#c").value),v:Number($("#e").value)||0};
+    var i=cultes.findIndex(function(x){return x.d==n.d&&x.t==n.t});
+    if(i>-1){n.id=cultes[i].id;cultes[i]=n}else cultes.push(n);
+    draw()});
+}
+function delCulte(id){
+  var c=cultes.filter(function(x){return x.id==id})[0];
+  open_("Supprimer ce culte",'<p>'+esc(c.t)+', '+fdate(c.d)+' : '+c.p+' membres présents.</p>',function(){cultes=cultes.filter(function(x){return x.id!=id});cul()},"Supprimer");
+}
+var FLD={dep:"dp",mv:"mv",gi:"gi",cel:"ce",cla:"cs"};
+var CFG={cel:{arr:function(){return cels},t:"Cellules",u:"cellule",pl:"cellules"},cla:{arr:function(){return clas},t:"Classes",u:"classe",pl:"classes"}};
+function chk(n){return [].slice.call(document.querySelectorAll('input[name="'+n+'"]:checked')).map(function(x){return x.value})}
+function fset(kind,legend,name,pre){
+  var c=CFG[kind];
+  return '<fieldset style="border:0;padding:0;margin:12px 0 0"><legend style="font-weight:600;margin-bottom:4px">'+legend+'</legend>'+(c.arr().map(function(v){return '<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:4px 0"><input type="checkbox" name="'+name+'" value="'+esc(v)+'"'+(sel(pre[kind],v)?' checked':'')+' style="width:auto"> '+esc(v)+'</label>'}).join("")||'<p class="note">Aucune '+c.u+' créée.</p>')+'</fieldset>';
+}
+function lst(kind){
+  var c=CFG[kind],list=c.arr();
+  var cnt=function(n){return membres.filter(function(m){return has(m,kind,n)}).length};
+  var max=Math.max.apply(null,list.map(cnt).concat([1]));
+  var bt='style="padding:4px 10px;font-size:13px"';
+  $("#main").innerHTML='<div class="head"><h2>'+c.t+'</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt" onclick="delLst(\''+kind+'\')">Supprimer la sélection</button><button class="btn" onclick="formLst(\''+kind+'\')">Ajouter</button></div></div>'+
+  '<div class="card">'+(list.map(function(n){var k=cnt(n);return '<div class="meter m4"><label><input type="checkbox" name="'+kind+'" value="'+esc(n)+'"> '+esc(n)+'</label><span><u style="width:'+Math.round(k/max*100)+'%"></u></span><span>'+k+' membre'+(k>1?'s':'')+'</span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn alt" '+bt+' data-n="'+esc(n)+'" onclick="addTo(\''+kind+'\',this.dataset.n)">+ Membre</button><button class="btn alt" '+bt+' data-n="'+esc(n)+'" onclick="attach(\''+kind+'\',this.dataset.n)">Rattacher</button></span></div>'}).join("")||'<p class="empty">Aucune '+c.u+'. Cliquez sur « Ajouter ».</p>')+'</div>'+
+  list.map(function(n){var l=membres.filter(function(m){return has(m,kind,n)});return '<div class="card" style="margin-top:14px"><h3>'+esc(n)+'</h3><p style="margin:0;color:var(--mute)">'+(l.length?l.map(function(m){return esc(m.nom)}).join(", "):"Aucun membre pour le moment.")+'</p></div>'}).join("")+
+  '<p class="note">Un membre peut appartenir à plusieurs '+c.pl+', ou à aucune.</p>';
+}
+function formLst(kind){
+  var c=CFG[kind];
+  open_("Ajouter des "+c.pl,'<label for="a">Un nom par ligne</label><textarea id="a" rows="5" required></textarea>',function(){
+    var l=c.arr();$("#a").value.split("\n").forEach(function(s){s=s.trim();if(s&&l.indexOf(s)<0)l.push(s)});lst(kind)});
+}
+function delLst(kind){
+  var c=CFG[kind],l=c.arr(),sel=chk(kind);
+  if(!sel.length){open_("Aucune sélection",'<p>Cochez au moins une '+c.u+' dans la liste, puis cliquez sur « Supprimer la sélection ».</p>',function(){},"Compris");return}
+  var n=membres.filter(function(m){return sel.some(function(s){return has(m,kind,s)})}).length;
+  open_("Supprimer "+sel.length+" élément"+(sel.length>1?"s":""),'<p>'+sel.map(function(s){return esc(s)}).join(", ")+'</p><p>'+(n?n+" membre"+(n>1?"s seront retirés":" sera retiré")+" de "+(sel.length>1?"ces "+c.pl:"cette "+c.u)+".":"Aucun membre n’est concerné.")+'</p>',function(){
+    sel.forEach(function(s){l.splice(l.indexOf(s),1)});
+    var f=FLD[kind];membres.forEach(function(m){m[f]=(m[f]||[]).filter(function(v){return sel.indexOf(v)<0})});lst(kind)},"Supprimer");
+}
+function has(m,kind,n){var v=m[FLD[kind]];return Array.isArray(v)?v.indexOf(n)>-1:v==n}
+function addTo(kind,n){var p={};p[kind]=n;formMembre(p)}
+var progs=[{id:1,nom:"Culte spécial de la royauté",eds:[]},{id:2,nom:"OASIS",eds:[]},{id:3,nom:"Rencontre de gloire",eds:[]},{id:4,nom:"SION",eds:[]},{id:5,nom:"Parents à l’honneur",eds:[]},{id:6,nom:"Pasteur du mois",eds:[]}];
+var curProg=null;
+function getProg(id){return progs.filter(function(x){return x.id==id})[0]}
+function prog(){curProg===null?progList():progView(curProg)}
+function openProg(id){curProg=id;prog();window.scrollTo(0,0)}
+function backProg(){curProg=null;prog()}
+function progList(){
+  $("#main").innerHTML='<div class="head"><h2>Programmes</h2><button class="btn" onclick="formProg()">Ajouter des programmes</button></div>'+
+  '<div class="grid">'+(progs.map(function(p){
+    var ys=p.eds.map(function(e){return e.d.slice(0,4)}).sort();
+    return '<button class="card pcard" onclick="openProg('+p.id+')"><h3>'+esc(p.nom)+'</h3><span style="color:var(--mute)">'+(p.eds.length?p.eds.length+' édition'+(p.eds.length>1?'s':'')+', dernière : '+ys[ys.length-1]:'Aucune édition')+'</span></button>'}).join("")||'<p class="empty">Aucun programme. Cliquez sur « Ajouter des programmes ».</p>')+'</div>'+
+  '<p class="note">Ouvrez un programme pour renseigner ses éditions année après année : date, orateur, résumé du message et photos.</p>';
+}
+function progView(id){
+  var p=getProg(id),eds=p.eds.slice().sort(function(a,b){return a.d<b.d?1:a.d>b.d?-1:0}),yr="";
+  $("#main").innerHTML='<button class="btn alt" onclick="backProg()" style="margin-bottom:14px">← Tous les programmes</button>'+
+  '<div class="head"><h2>'+esc(p.nom)+'</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt" onclick="delProg('+p.id+')">Supprimer le programme</button><button class="btn" onclick="formEd('+p.id+')">Ajouter une édition</button></div></div>'+
+  (eds.map(function(e){
+    var y=e.d.slice(0,4),h=y!=yr?'<h3 class="yr">'+y+'</h3>':'';yr=y;
+    return h+'<div class="card" style="margin-bottom:12px"><div class="head" style="margin-bottom:6px"><div><b>'+fdate(e.d)+'</b>'+(e.th?' · '+esc(e.th):'')+'</div><div style="display:flex;gap:6px"><button class="btn alt" style="padding:3px 10px;font-size:13px" onclick="formEd('+p.id+','+e.id+')">Modifier</button><button class="btn alt" style="padding:3px 10px;font-size:13px" onclick="delEd('+p.id+','+e.id+')">Supprimer</button></div></div>'+
+    '<div style="color:var(--mute)">Orateur : '+(e.orat?esc(e.orat):"non renseigné")+'</div>'+
+    (e.res?'<p style="white-space:pre-wrap;margin:10px 0 0">'+esc(e.res)+'</p>':'')+
+    (e.ph.length?'<div class="ph">'+e.ph.map(function(s,i){return '<img src="'+s+'" alt="Photo '+(i+1)+' de l’édition du '+fdate(e.d)+'" onclick="zoom('+p.id+','+e.id+','+i+')">'}).join("")+'</div>':'')+'</div>'}).join("")||'<div class="card"><p class="empty">Aucune édition enregistrée. Cliquez sur « Ajouter une édition ».</p></div>');
+}
+function zoom(pid,eid,i){
+  var e=getProg(pid).eds.filter(function(x){return x.id==eid})[0];
+  open_(esc(getProg(pid).nom)+', '+fdate(e.d),'<img src="'+e.ph[i]+'" alt="" style="width:100%;border-radius:8px;margin-top:10px">',function(){},"Fermer");
+}
+function readImgs(files,cb){
+  var list=[].slice.call(files),out=[],n=0;
+  if(!list.length)return cb(out);
+  var done=function(){if(++n==list.length)cb(out)};
+  list.forEach(function(f){
+    var r=new FileReader();
+    r.onerror=done;
+    r.onload=function(){var im=new Image();im.onerror=done;im.onload=function(){
+      var k=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement("canvas");
+      c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+      c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(function(b){
+        var path="prog/"+(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2))+".jpg";
+        sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg"}).then(function(u){
+          if(u.error)alert("Une photo n’a pas pu être envoyée. Vérifiez votre connexion et vos droits.");
+          else out.push(sb.storage.from("photos").getPublicUrl(path).data.publicUrl);
+          done()})},"image/jpeg",.82)};im.src=r.result};
+    r.readAsDataURL(f)});
+}
+function formEd(pid,eid){
+  var p=getProg(pid);
+  var e=eid?p.eds.filter(function(x){return x.id==eid})[0]:{d:new Date().toISOString().slice(0,10),th:"",orat:"",res:"",ph:[]};
+  open_((eid?"Modifier":"Ajouter")+" une édition : "+esc(p.nom),
+  '<label for="a">Date</label><input id="a" type="date" value="'+e.d+'" required>'+
+  '<label for="b">Thème (facultatif)</label><input id="b" value="'+esc(e.th)+'">'+
+  '<label for="c">Orateur</label><input id="c" value="'+esc(e.orat)+'">'+
+  '<label for="r">Résumé du message</label><textarea id="r" rows="5">'+esc(e.res)+'</textarea>'+
+  (e.ph.length?'<label>Photos actuelles (cochez pour retirer)</label><div class="ph">'+e.ph.map(function(s,i){return '<label style="margin:0;position:relative;display:inline-block"><img src="'+s+'" alt="" style="cursor:default"><input type="checkbox" name="rmph" value="'+i+'" style="width:auto;position:absolute;top:4px;right:4px"></label>'}).join("")+'</div>':'')+
+  '<label for="fp">Ajouter des photos</label><input id="fp" type="file" accept="image/*" multiple>',
+  function(){
+    var d=$("#a").value,th=$("#b").value.trim(),orat=$("#c").value.trim(),res=$("#r").value.trim(),files=$("#fp").files;
+    var rm=[].slice.call(document.querySelectorAll('input[name="rmph"]:checked')).map(function(x){return Number(x.value)});
+    readImgs(files,function(imgs){
+      var n={id:eid||Date.now(),d:d,th:th,orat:orat,res:res,ph:e.ph.filter(function(s,i){return rm.indexOf(i)<0}).concat(imgs)};
+      if(eid)p.eds[p.eds.indexOf(e)]=n;else p.eds.push(n);
+      prog()});
+  });
+}
+function delEd(pid,eid){
+  var p=getProg(pid),e=p.eds.filter(function(x){return x.id==eid})[0];
+  open_("Supprimer cette édition",'<p>'+esc(p.nom)+', '+fdate(e.d)+(e.orat?' ('+esc(e.orat)+')':'')+'.</p><p>Le résumé et les photos seront supprimés.</p>',function(){p.eds=p.eds.filter(function(x){return x.id!=eid});prog()},"Supprimer");
+}
+function delProg(pid){
+  var p=getProg(pid);
+  open_("Supprimer ce programme",'<p>'+esc(p.nom)+'</p><p>'+(p.eds.length?'Ses '+p.eds.length+' édition'+(p.eds.length>1?'s':'')+', avec résumés et photos, seront supprimées.':'Aucune édition n’est enregistrée.')+'</p>',function(){progs=progs.filter(function(x){return x.id!=pid});curProg=null;prog()},"Supprimer");
+}
+function formProg(){
+  open_("Ajouter des programmes",'<label for="a">Un nom par ligne</label><textarea id="a" rows="5" required></textarea>',function(){
+    $("#a").value.split("\n").forEach(function(s,i){s=s.trim();if(s&&!progs.some(function(x){return x.nom==s}))progs.push({id:Date.now()+i,nom:s,eds:[]})});
+    prog()});
+}
+function open_(title,body,save,ok){
+  $("#frm").innerHTML='<h3>'+title+'</h3>'+body+'<div class="acts"><button type="button" class="btn alt" onclick="$(\'#dlg\').close()">Annuler</button><button class="btn" type="submit">'+(ok||"Enregistrer")+'</button></div>';
+  $("#frm").onsubmit=function(e){e.preventDefault();save();$("#dlg").close()};
+  $("#dlg").showModal();
+}
+var MSG_CONFIG="L’application n’est pas encore configurée : renseignez l’adresse et la clé Supabase au début du fichier index.html (voir LISEZMOI.md).";
+var sb=null,role="aucun",who="",saved={},ver={},busy=false,timer=null;
+var ACCESS={
+ membres:{r:["admin","pasteur","secretaire","tresorier"],w:["admin","pasteur","secretaire"]},
+ cultes:{r:["admin","pasteur","secretaire","tresorier"],w:["admin","pasteur","secretaire"]},
+ programmes:{r:["admin","pasteur","secretaire","tresorier"],w:["admin","pasteur","secretaire"]},
+ finances:{r:["admin","pasteur","tresorier"],w:["admin","pasteur","tresorier"]}};
+var TABKEY={dash:"cultes",mem:"membres",grp:"membres",mv:"membres",cul:"cultes",cel:"membres",cla:"membres",prog:"programmes",fin:"finances"};
+var ROLES={admin:"Administrateur",pasteur:"Pasteur",secretaire:"Secrétaire",tresorier:"Trésorier"};
+function canR(k){return ACCESS[k].r.indexOf(role)>-1}
+function snapshot(k){
+  return JSON.stringify(k=="membres"?{membres:membres,deps:deps,gis:gis,mvs:mvs,cels:cels,clas:clas}:k=="cultes"?{cultes:cultes}:k=="programmes"?{progs:progs}:{dons:dons});
+}
+function applyKey(k,v){
+  if(k=="membres"){membres=v.membres||[];deps=v.deps||[];gis=v.gis||[];mvs=v.mvs||[];cels=v.cels||[];clas=v.clas||[]}
+  else if(k=="cultes")cultes=v.cultes||[];
+  else if(k=="programmes")progs=v.progs||progs;
+  else if(k=="finances")dons=v.dons||[];
+}
+function pending(){return Object.keys(ACCESS).some(function(k){return snapshot(k)!=saved[k]})}
+function setWho(t){$("#who").textContent=who+(t?" · "+t:"")}
+function showLogin(msg){$("#login").className="on";$("#lerr").textContent=msg||""}
+function login(e){
+  e.preventDefault();
+  if(!sb){showLogin(MSG_CONFIG);return}
+  $("#lerr").textContent="Connexion en cours…";
+  sb.auth.signInWithPassword({email:$("#lem").value.trim(),password:$("#lpw").value}).then(function(r){
+    if(r.error){
+      $("#lerr").textContent=/invalid|credentials/i.test(r.error.message||"")?"Email ou mot de passe incorrect.":"Connexion impossible : "+(r.error.message||"erreur inconnue");
+    }else{$("#lpw").value="";start()}
+  }).catch(fail);
+}
+function fail(err){showLogin("Connexion impossible : "+((err&&err.message)||"vérifiez votre connexion internet")+".")}
+function logout(){sb.auth.signOut().then(function(){location.reload()})}
+function loadAll(){
+  return sb.from("eglise_data").select("key,value,updated_at").then(function(r){
+    if(r.error)throw r.error;
+    r.data.forEach(function(x){applyKey(x.key,x.value);ver[x.key]=x.updated_at});
+    Object.keys(ACCESS).forEach(function(k){saved[k]=snapshot(k)});
+  });
+}
+function start(){
+  sb.auth.getSession().then(function(r){
+    var ses=r.data.session;
+    if(!ses){showLogin();return}
+    sb.from("profiles").select("role").eq("id",ses.user.id).single().then(function(p){
+      if(p.error&&p.error.code!="PGRST116"){showLogin("Erreur de base de données : "+p.error.message+" (le script schema.sql a-t-il été exécuté ?)");return}
+      role=(p.data&&p.data.role)||"aucun";
+      if(!ROLES[role]){showLogin("Votre compte est créé mais n’a pas encore été activé. Demandez à l’administrateur de vous attribuer un rôle.");sb.auth.signOut();return}
+      who=ses.user.email+" ("+ROLES[role].toLowerCase()+")";
+      loadAll().then(function(){
+        $("#login").className="";setWho("");tab="dash";nav();draw();
+        if(!timer)timer=setInterval(sync,1500);
+      }).catch(function(){showLogin("Impossible de charger les données. Vérifiez votre connexion puis rechargez la page.")});
+    }).catch(fail);
+  }).catch(fail);
+}
+function sync(){
+  if(busy||!sb||role=="aucun")return;
+  var k=Object.keys(ACCESS).filter(function(k){return snapshot(k)!=saved[k]})[0];
+  if(!k){return}
+  busy=true;setWho("enregistrement…");
+  var snap=snapshot(k),val=JSON.parse(snap),t=sb.from("eglise_data");
+  var q=ver[k]?t.update({value:val}).eq("key",k).eq("updated_at",ver[k]).select("updated_at"):t.insert({key:k,value:val}).select("updated_at");
+  q.then(function(r){
+    busy=false;
+    if(r.error||!r.data||!r.data.length){
+      alert("Cette modification n’a pas pu être enregistrée : soit une autre personne a modifié ces données en même temps, soit votre rôle ne permet pas de les modifier. Les données vont être rechargées.");
+      loadAll().then(function(){if(curProg!==null&&!getProg(curProg))curProg=null;setWho("");draw()});
+      return;
+    }
+    ver[k]=r.data[0].updated_at;saved[k]=snap;setWho(pending()?"enregistrement…":"enregistré");
+  });
+}
+function exportAll(){
+  var o={};Object.keys(ACCESS).forEach(function(k){if(canR(k))o[k]=JSON.parse(snapshot(k))});
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(o,null,1)],{type:"application/json"}));
+  a.download="sauvegarde-eglise-"+new Date().toISOString().slice(0,10)+".json";a.click();
+}
+function delMem(id){
+  var m=membres.filter(function(x){return x.id==id})[0];
+  open_("Supprimer ce membre",'<p>'+esc(m.nom)+'</p><p>Il sera retiré de la liste, de ses départements, groupes, mouvements, cellules et classes. Les dons déjà enregistrés à son nom sont conservés.</p>',function(){membres=membres.filter(function(x){return x.id!=id});draw()},"Supprimer");
+}
+function delDon(id){
+  var x=dons.filter(function(d){return d.id==id})[0];
+  open_("Supprimer ce don",'<p>'+fdate(x.d)+' : '+esc(x.m)+', '+esc(x.t)+', '+fmt(x.v)+'.</p>',function(){dons=dons.filter(function(d){return d.id!=id});fin()},"Supprimer");
+}
+function sel(x,v){return Array.isArray(x)?x.indexOf(v)>-1:x==v}
+window.addEventListener("beforeunload",function(e){if(sb&&pending()){e.preventDefault();e.returnValue=""}});
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState=="visible"&&sb&&ROLES[role]&&!busy&&!pending()&&!$("#dlg").open)
+    loadAll().then(function(){if(curProg!==null&&!getProg(curProg))curProg=null;draw()});
+});
+$("#chname").textContent="⛪ "+CONFIG.EGLISE_NOM;
+document.title=CONFIG.EGLISE_NOM+" · Espace de gestion";
+$("#lt").textContent=CONFIG.EGLISE_NOM;
+if(!window.supabase){
+  MSG_CONFIG="La bibliothèque de connexion n’a pas pu se charger. Vérifiez votre connexion internet puis rechargez la page.";showLogin(MSG_CONFIG);
+}else if(CONFIG.SUPABASE_URL.indexOf("VOTRE")>-1||CONFIG.SUPABASE_ANON_KEY.indexOf("VOTRE")>-1){
+  showLogin(MSG_CONFIG);
+}else{
+  sb=window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
+  start();
+}
+</script>
+</body>
+</html>
