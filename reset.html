@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Choisir un nouveau mot de passe</title>
+  <style>
+    :root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; color: #14213d; background: #f3f5f9; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    main { width: min(100%, 520px); padding: 30px; border: 1px solid #dde2ec; border-radius: 16px; background: white; }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    p { color: #5b6781; }
+    label { display: block; margin: 18px 0 6px; font-weight: 600; }
+    input { width: 100%; padding: 12px; border: 1px solid #cbd3e0; border-radius: 8px; font: inherit; }
+    button { width: 100%; margin-top: 22px; padding: 12px; border: 0; border-radius: 8px; background: #1f3a6e; color: white; font: inherit; font-weight: 700; cursor: pointer; }
+    button:disabled { opacity: .65; cursor: wait; }
+    #status { min-height: 1.5em; margin-top: 14px; color: #a12c2c; }
+    #status.ok { color: #1f7a55; }
+    .hint { font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Nouveau mot de passe</h1>
+    <p>Choisissez un mot de passe pour votre compte de gestion de l’église.</p>
+    <form id="passwordForm">
+      <label for="newPassword">Nouveau mot de passe</label>
+      <input id="newPassword" type="password" autocomplete="new-password" minlength="8" required>
+      <label for="confirmPassword">Confirmer le mot de passe</label>
+      <input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" required>
+      <p class="hint">Utilisez au moins 8 caractères et gardez ce mot de passe privé.</p>
+      <button id="saveButton" type="submit">Enregistrer le nouveau mot de passe</button>
+      <p id="status" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+  <iframe id="appClient" src="./index.html" title="Connexion sécurisée" hidden></iframe>
+  <script>
+    const form = document.getElementById("passwordForm");
+    const status = document.getElementById("status");
+    const saveButton = document.getElementById("saveButton");
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      status.className = "";
+      const password = document.getElementById("newPassword").value;
+      const confirmation = document.getElementById("confirmPassword").value;
+      if (password !== confirmation) {
+        status.textContent = "Les deux mots de passe ne correspondent pas.";
+        return;
+      }
+
+      saveButton.disabled = true;
+      status.textContent = "Enregistrement en cours…";
+      try {
+        const frame = document.getElementById("appClient");
+        const client = frame.contentWindow && frame.contentWindow.sb;
+        if (!client) throw new Error("La connexion n’est pas prête. Rechargez cette page et réessayez.");
+        const sessionResult = await client.auth.getSession();
+        if (sessionResult.error) throw sessionResult.error;
+        if (!sessionResult.data.session) {
+          throw new Error("La session a expiré. Demandez un nouveau courriel de réinitialisation.");
+        }
+        const result = await client.auth.updateUser({ password: password });
+        if (result.error) throw result.error;
+        status.className = "ok";
+        status.textContent = "Mot de passe enregistré. Retour à l’application…";
+        setTimeout(function () { window.location.href = "./"; }, 1200);
+      } catch (error) {
+        status.textContent = error && error.message ? error.message : "Impossible d’enregistrer le mot de passe.";
+        saveButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
