@@ -140,7 +140,7 @@ function mem(){
 }
 function rows(){
   var q=$("#q").value.toLowerCase(),f=$("#f").value,g=$("#g").value,mf=$("#mf").value;
-  var l=membres.filter(function(m){return m.nom.toLowerCase().indexOf(q)>-1&&(!f||(m.dp||[]).indexOf(f)>-1)&&(!g||m.gi==g)&&(!mf||(m.mv||[]).indexOf(mf)>-1)});
+  var l=membres.filter(function(m){return m.nom.toLowerCase().indexOf(q)>-1&&(!f||(m.dp||[]).indexOf(f)>-1)&&(!g||m.gi==g)&&(!mf||(m.mv||[]).indexOf(mf)>-1)}).sort(function(a,b){return a.nom.localeCompare(b.nom,"fr",{sensitivity:"base"})});;
   $("#tb").innerHTML=l.length?l.map(function(m){return '<tr><td>'+esc(m.nom)+'</td><td>'+esc(m.tel)+'</td><td>'+esc((m.dp||[]).join(", ")||"—")+'</td><td>'+esc(m.gi||"—")+'</td><td>'+esc((m.mv||[]).join(", ")||"—")+'</td><td>'+esc((m.ce||[]).join(", ")||"—")+'</td><td>'+esc((m.cs||[]).join(", ")||"—")+'</td><td>'+fdate(m.bapt)+'</td><td><span class="tag '+(m.statut=="Membre"?'ok':'')+'">'+m.statut+'</span></td><td style="white-space:nowrap"><button class="btn alt" style="padding:3px 10px;font-size:13px" onclick="formMembre(null,'+m.id+')">Modifier</button> <button class="btn alt" style="padding:3px 10px;font-size:13px" onclick="delMem('+m.id+')">Supprimer</button></td></tr>'}).join(""):'<tr><td colspan="10" class="empty">Aucun membre ne correspond. Modifiez la recherche ou ajoutez un membre.</td></tr>';
 }
 function formMembre(pre,eid){pre=pre||{};
